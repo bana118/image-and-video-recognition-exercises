@@ -1,0 +1,5 @@
+jupyterlab==2.2.9
+ipympl==0.5.8
+numpy==1.19.4
+pandas==1.1.5
+matplotlib==3.3.3
