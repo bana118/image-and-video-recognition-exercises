@@ -1,4 +1,8 @@
 import torch
+import urllib
+from PIL import Image
+from torchvision import transforms
+
 model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet18', pretrained=True)
 # or any of these variants
 # model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet34', pretrained=True)
@@ -8,16 +12,14 @@ model = torch.hub.load('pytorch/vision:v0.6.0', 'resnet18', pretrained=True)
 model.eval()
 
 # Download an example image from the pytorch website
-import urllib
-url, filename = ("https://github.com/pytorch/hub/raw/master/images/dog.jpg", "dog.jpg")
+
+url, filename = ("https://ithub.com/pytorch/hub/raw/master/images/dog.jpg", "dog.jpg")
 try:
     urllib.URLopener().retrieve(url, filename)
-except:
+except urllib.error.URLError:
     urllib.request.urlretrieve(url, filename)
 
 # sample execution (requires torchvision)
-from PIL import Image
-from torchvision import transforms
 input_image = Image.open(filename)
 preprocess = transforms.Compose([
     transforms.Resize(256),
