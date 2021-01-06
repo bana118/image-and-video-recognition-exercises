@@ -223,7 +223,7 @@ class Net(nn.Module):
         self.conv2_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        self.fc1 = nn.Linear(in_features=128 * 75 * 75, out_features=128)
+        self.fc1 = nn.Linear(in_features=128 * 64 * 64, out_features=128)
         self.fc2 = nn.Linear(in_features=128, out_features=5)
 
     def forward(self, x):
@@ -234,8 +234,7 @@ class Net(nn.Module):
         x = F.relu(self.conv2_1(x))
         x = F.relu(self.conv2_2(x))
         x = self.pool2(x)
-
-        x = x.view(-1, 128 * 75 * 75)
+        x = x.view(-1, 128 * 64 * 64)
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
@@ -259,7 +258,7 @@ for epoch in range(num_epochs):
     print('Epoch {}/{}'.format(epoch + 1, num_epochs))
     print('-------------')
 
-    for phase in ['train', 'val']:
+    for phase in ['train', 'valid']:
 
         if phase == 'train':
             # モデルを訓練モードに設定
@@ -279,7 +278,6 @@ for epoch in range(num_epochs):
             optimizer.zero_grad()
 
             # 学習時のみ勾配を計算させる設定にする
-            print("start train")
             with torch.set_grad_enabled(phase == 'train'):
                 outputs = net(inputs)
 
@@ -306,7 +304,6 @@ for epoch in range(num_epochs):
 
                 # 正解数の合計を更新
                 epoch_corrects += torch.sum(preds == labels.data)
-            print("finish train")
 
         # epochごとのlossと正解率を表示
         epoch_loss = epoch_loss / len(dataloaders_dict[phase].dataset)
