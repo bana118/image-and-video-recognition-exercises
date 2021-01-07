@@ -13,42 +13,55 @@ from torchvision import transforms
 
 import matplotlib.pyplot as plt
 # %%
+sho_unicode = "U66F8"
+dou_unicode = "U9053"
+renamed_data_dir_path = os.path.join(os.path.dirname(__file__), "renamed_data")
 
 
 def make_filepath_list():
-    """
-    学習データ、検証データそれぞれのファイルへのパスを格納したリストを返す
+    sho_train_file_list = []
+    sho_valid_file_list = []
+    dou_train_file_list = []
+    dou_valid_file_list = []
 
-    Returns
-    -------
-    train_file_list: list
-        学習データファイルへのパスを格納したリスト
-    valid_file_list: list
-        検証データファイルへのパスを格納したリスト
-    """
-    train_file_list = []
-    valid_file_list = []
+    sho_file_list = os.listdir(os.path.join(renamed_data_dir_path, sho_unicode))
+    dou_file_list = os.listdir(os.path.join(renamed_data_dir_path, dou_unicode))
 
-    file_list = os.listdir("../images")
-    # 各犬種ごとに8割を学習データ、2割を検証データとする
-    num_data = len(file_list)
-    num_split = int(num_data * 0.8)
-    train_file_list += [os.path.join('../images', file).replace('\\', '/') for file in file_list[:num_split]]
-    valid_file_list += [os.path.join('../images', file).replace('\\', '/') for file in file_list[num_split:]]
+    # TODO ランダム化
+    sho_num_data = len(sho_file_list)
+    sho_num_split = int(sho_num_data * 0.8)
+    dou_num_data = len(dou_file_list)
+    dou_num_split = int(dou_num_data * 0.8)
 
-    return train_file_list, valid_file_list
+    sho_train_file_list += [os.path.join(renamed_data_dir_path, sho_unicode,
+                                         file_name).replace("\\", "/") for file_name in sho_file_list[:sho_num_split]]
+    sho_valid_file_list += [os.path.join(renamed_data_dir_path, sho_unicode,
+                                         file_name).replace("\\", "/") for file_name in sho_file_list[sho_num_split:]]
+    dou_train_file_list += [os.path.join(renamed_data_dir_path, dou_unicode,
+                                         file_name).replace("\\", "/") for file_name in dou_file_list[:dou_num_split]]
+    dou_valid_file_list += [os.path.join(renamed_data_dir_path, dou_unicode,
+                                         file_name).replace("\\", "/") for file_name in dou_file_list[dou_num_split:]]
+    return sho_train_file_list, sho_valid_file_list, dou_train_file_list, dou_valid_file_list
 
 
 # 画像データへのファイルパスを格納したリストを取得する
-train_file_list, valid_file_list = make_filepath_list()
+sho_train_file_list, sho_valid_file_list, dou_train_file_list, dou_valid_file_list = make_filepath_list()
 
-print('学習データ数 : ', len(train_file_list))
+print('「書」学習データ数 : ', len(sho_train_file_list))
 # 先頭3件だけ表示
-print(train_file_list[:3])
+print(sho_train_file_list[:3])
 
-print('検証データ数 : ', len(valid_file_list))
+print('「書」検証データ数 : ', len(sho_valid_file_list))
 # 先頭3件だけ表示
-print(valid_file_list[:3])
+print(sho_valid_file_list[:3])
+
+print('「道」学習データ数 : ', len(dou_train_file_list))
+# 先頭3件だけ表示
+print(dou_train_file_list[:3])
+
+print('「道」検証データ数 : ', len(dou_valid_file_list))
+# 先頭3件だけ表示
+print(dou_valid_file_list[:3])
 
 # %%
 
@@ -95,7 +108,8 @@ class ImageTransform(object):
 
 
 # 動作確認
-img = Image.open('../images/1.png').convert("RGB")
+img = Image.open(os.path.join(renamed_data_dir_path, sho_unicode,
+                              f"{sho_unicode}_00001.png")).convert("RGB")
 
 # リサイズ先の画像サイズ
 resize = 256
