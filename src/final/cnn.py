@@ -226,7 +226,7 @@ print(shodou_train_dataset.__getitem__(index)[1])
 
 # %%
 # バッチサイズの指定
-batch_size = 64
+batch_size = 32
 
 # DataLoaderを作成
 train_dataloader = data.DataLoader(
@@ -253,41 +253,65 @@ print(labels)
 # %%
 
 
-class Net(nn.Module):
+# class Net(nn.Module):
 
+#     def __init__(self):
+#         super(Net, self).__init__()
+
+#         self.conv1_1 = nn.Conv2d(
+#             in_channels=3, out_channels=64, kernel_size=3, padding=1)
+#         self.conv1_2 = nn.Conv2d(
+#             in_channels=64, out_channels=64, kernel_size=3, padding=1)
+#         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+#         self.conv2_1 = nn.Conv2d(
+#             in_channels=64, out_channels=128, kernel_size=3, padding=1)
+#         self.conv2_2 = nn.Conv2d(
+#             in_channels=128, out_channels=128, kernel_size=3, padding=1)
+#         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
+
+#         self.fc1 = nn.Linear(in_features=128 * 64 * 64, out_features=128)
+#         self.fc2 = nn.Linear(in_features=128, out_features=5)
+
+#     def forward(self, x):
+#         x = F.relu(self.conv1_1(x))
+#         x = F.relu(self.conv1_2(x))
+#         x = self.pool1(x)
+
+#         x = F.relu(self.conv2_1(x))
+#         x = F.relu(self.conv2_2(x))
+#         x = self.pool2(x)
+#         x = x.view(-1, 128 * 64 * 64)
+#         x = self.fc1(x)
+#         x = F.relu(x)
+#         x = self.fc2(x)
+#         x = F.softmax(x, dim=1)
+
+#         return x
+class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-
-        self.conv1_1 = nn.Conv2d(
-            in_channels=3, out_channels=64, kernel_size=3, padding=1)
-        self.conv1_2 = nn.Conv2d(
-            in_channels=64, out_channels=64, kernel_size=3, padding=1)
-        self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.conv2_1 = nn.Conv2d(
-            in_channels=64, out_channels=128, kernel_size=3, padding=1)
-        self.conv2_2 = nn.Conv2d(
-            in_channels=128, out_channels=128, kernel_size=3, padding=1)
-        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.fc1 = nn.Linear(in_features=128 * 64 * 64, out_features=128)
-        self.fc2 = nn.Linear(in_features=128, out_features=5)
+        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc1 = nn.Linear(9216, 128)
+        self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
-        x = F.relu(self.conv1_1(x))
-        x = F.relu(self.conv1_2(x))
-        x = self.pool1(x)
-
-        x = F.relu(self.conv2_1(x))
-        x = F.relu(self.conv2_2(x))
-        x = self.pool2(x)
-        x = x.view(-1, 128 * 64 * 64)
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
         x = self.fc1(x)
         x = F.relu(x)
+        x = self.dropout2(x)
         x = self.fc2(x)
-        x = F.softmax(x, dim=1)
-
-        return x
+        output = F.log_softmax(x, dim=1)
+        return output
 
 
 net = Net()
@@ -295,7 +319,8 @@ print(net)
 
 # %%
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.01)
+# optimizer = optim.SGD(net.parameters(), lr=0.01)
+optimizer = optim.Adadelta(net.parameters(), lr=1.0)
 
 # %%
 # エポック数
@@ -329,7 +354,8 @@ for epoch in range(num_epochs):
                 outputs = net(inputs)
 
                 # 損失を計算
-                loss = criterion(outputs, labels)
+                # loss = criterion(outputs, labels)
+                loss = F.nll_loss(outputs, labels)
 
                 # ラベルを予測
                 _, preds = torch.max(outputs, 1)
