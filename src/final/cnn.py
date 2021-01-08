@@ -24,8 +24,10 @@ def make_filepath_list():
     dou_train_file_list = []
     dou_valid_file_list = []
 
-    sho_file_list = os.listdir(os.path.join(renamed_data_dir_path, sho_unicode))
-    dou_file_list = os.listdir(os.path.join(renamed_data_dir_path, dou_unicode))
+    sho_file_list = os.listdir(os.path.join(
+        renamed_data_dir_path, sho_unicode))
+    dou_file_list = os.listdir(os.path.join(
+        renamed_data_dir_path, dou_unicode))
 
     # TODO ランダム化
     sho_num_data = len(sho_file_list)
@@ -256,12 +258,16 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
 
-        self.conv1_1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, padding=1)
-        self.conv1_2 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1)
+        self.conv1_1 = nn.Conv2d(
+            in_channels=3, out_channels=64, kernel_size=3, padding=1)
+        self.conv1_2 = nn.Conv2d(
+            in_channels=64, out_channels=64, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        self.conv2_1 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
-        self.conv2_2 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1)
+        self.conv2_1 = nn.Conv2d(
+            in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        self.conv2_2 = nn.Conv2d(
+            in_channels=128, out_channels=128, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
 
         self.fc1 = nn.Linear(in_features=128 * 64 * 64, out_features=128)
@@ -348,9 +354,11 @@ for epoch in range(num_epochs):
 
         # epochごとのlossと正解率を表示
         epoch_loss = epoch_loss / len(dataloaders_dict[phase].dataset)
-        epoch_acc = epoch_corrects.double() / len(dataloaders_dict[phase].dataset)
+        epoch_acc = epoch_corrects.double(
+        ) / len(dataloaders_dict[phase].dataset)
 
-        print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+        print('{} Loss: {:.4f} Acc: {:.4f}'.format(
+            phase, epoch_loss, epoch_acc))
 
 # %%
 print("finish")
