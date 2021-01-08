@@ -130,7 +130,7 @@ plt.show()
 # %%
 
 
-class ShoDataset(data.Dataset):
+class ShodouDataset(data.Dataset):
     def __init__(self, file_list, classes, transform=None, phase='train'):
         self.file_list = file_list
         self.transform = transform
@@ -156,8 +156,7 @@ class ShoDataset(data.Dataset):
 
         # 画像ラベルをファイル名から抜き出す
         # label = self.file_list[index].split('/')[2][10:]
-        # 暫定
-        label = "sho"
+        label = self.file_list[index].split("/")[-1].split("_")[0]
 
         # ラベル名を数値に変換
         label = self.classes.index(label)
@@ -168,7 +167,7 @@ class ShoDataset(data.Dataset):
 # 動作確認
 # クラス名
 chr_classes = [
-    "sho"
+    "U66F8", "U9053"
 ]
 
 # リサイズ先の画像サイズ
@@ -179,21 +178,49 @@ mean = (0.5, 0.5, 0.5)
 std = (0.5, 0.5, 0.5)
 
 # Datasetの作成
-train_dataset = ShoDataset(
-    file_list=train_file_list, classes=chr_classes,
+sho_train_file_list.extend(dou_train_file_list)
+shodou_train_dataset = ShodouDataset(
+    file_list=sho_train_file_list, classes=chr_classes,
     transform=ImageTransform(resize, mean, std),
     phase='train'
 )
-
-valid_dataset = ShoDataset(
-    file_list=valid_file_list, classes=chr_classes,
+sho_valid_file_list.extend(dou_valid_file_list)
+shodou_valid_dataset = ShodouDataset(
+    file_list=sho_valid_file_list, classes=chr_classes,
     transform=ImageTransform(resize, mean, std),
     phase='valid'
 )
 
+# sho_train_dataset = ShodouDataset(
+#     file_list=sho_train_file_list, classes=chr_classes,
+#     transform=ImageTransform(resize, mean, std),
+#     phase='train', label="sho"
+# )
+
+# sho_valid_dataset = ShodouDataset(
+#     file_list=sho_valid_file_list, classes=chr_classes,
+#     transform=ImageTransform(resize, mean, std),
+#     phase='valid', label="sho"
+# )
+
+# dou_train_dataset = ShodouDataset(
+#     file_list=dou_train_file_list, classes=chr_classes,
+#     transform=ImageTransform(resize, mean, std),
+#     phase='train', label="dou"
+# )
+
+# dou_valid_dataset = ShodouDataset(
+#     file_list=dou_valid_file_list, classes=chr_classes,
+#     transform=ImageTransform(resize, mean, std),
+#     phase='valid', label="dou"
+# )
+
+
 index = 0
-print(train_dataset.__getitem__(index)[0].size())
-print(train_dataset.__getitem__(index)[1])
+print(shodou_train_dataset.__getitem__(index)[0].size())
+print(shodou_train_dataset.__getitem__(index)[1])
+# print(sho_train_dataset.__getitem__(index)[0].size())
+# print(sho_train_dataset.__getitem__(index)[1])
 
 # %%
 # バッチサイズの指定
@@ -201,10 +228,10 @@ batch_size = 64
 
 # DataLoaderを作成
 train_dataloader = data.DataLoader(
-    train_dataset, batch_size=batch_size, shuffle=True)
+    shodou_train_dataset, batch_size=batch_size, shuffle=True)
 
 valid_dataloader = data.DataLoader(
-    valid_dataset, batch_size=32, shuffle=False)
+    shodou_valid_dataset, batch_size=32, shuffle=False)
 
 # 辞書にまとめる
 dataloaders_dict = {
