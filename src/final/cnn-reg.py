@@ -39,17 +39,41 @@ class ShodouDataset(torch.utils.data.Dataset):
         # 画像の前処理を実施
         img_transformed = self.transform(img)
 
-        # 画像ラベルをファイル名から抜き出す
-        # label = self.file_list[index].split('/')[2][10:]
         img_id = self.img_file_list[index].split("/")[-1].split(".")[0]
 
-        # ラベル名を数値に変換
         write_time = self.time_dict[img_id]
 
         return img_transformed, write_time
+
+# %%
+
 # %%
 
 
+# class Net(nn.Module):
+#     def __init__(self):
+#         super(Net, self).__init__()
+#         self.conv1 = nn.Conv2d(3, 32, 3, 1)
+#         self.conv2 = nn.Conv2d(32, 64, 3, 1)
+#         self.dropout1 = nn.Dropout(0.25)
+#         self.dropout2 = nn.Dropout(0.5)
+#         self.fc1 = nn.Linear(128 * 7938, 128)
+#         self.fc2 = nn.Linear(128, 1)
+
+#     def forward(self, x):
+#         x = self.conv1(x)
+#         x = F.relu(x)
+#         x = self.conv2(x)
+#         x = F.relu(x)
+#         x = F.max_pool2d(x, 2)
+#         x = self.dropout1(x)
+#         x = torch.flatten(x, 1)
+#         x = self.fc1(x)
+#         x = F.relu(x)
+#         x = self.dropout2(x)
+#         x = self.fc2(x)
+#         output = F.log_softmax(x, dim=1)
+#         return torch.flatten(output)
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -71,7 +95,7 @@ class Net(nn.Module):
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
-        output = F.softmax(x)
+        output = F.softmax(x, dim=1)
         return torch.flatten(output)
 
 # %%
@@ -142,7 +166,7 @@ def train(model, device, train_loader, optimizer, epoch):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.mse_loss(output, target.to(torch.float))
+        loss = F.mse_loss(output, target.float())
         loss.backward()
         optimizer.step()
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -159,8 +183,9 @@ def test(model, device, test_loader):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
+            print(output.data)
             # sum up batch loss
-            test_loss += F.mse_loss(output, target.to(torch.float), reduction='sum').item()
+            test_loss += F.mse_loss(output, target.float(), reduction='sum').item()
             # get the index of the max log-probability
             # pred = output.argmax(keepdim=True)
             # correct += pred.eq(target.view_as(pred)).sum().item()
@@ -190,7 +215,6 @@ def main():
 
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
     ])
 
     train_filelist, test_filelist = create_file_list(
@@ -207,13 +231,11 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
-    print(len(train_loader))
-
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
+    scheduler = StepLR(optimizer, step_size=10, gamma=0.7)
 
-    for epoch in range(1, 15):
+    for epoch in range(1, 101):
         train(model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
         scheduler.step()
