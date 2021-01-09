@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import os
+import csv
 from PIL import Image
 
 import argparse
@@ -18,23 +19,23 @@ import time
 # %%
 
 class ShodouDataset(torch.utils.data.Dataset):
-    def __init__(self, file_list, classes, transform=None):
-        self.file_list = file_list
+    def __init__(self, img_file_list, time_dict, transform=None):
+        self.img_file_list = img_file_list
         self.transform = transform
-        self.classes = classes
+        self.time_dict = time_dict
 
     def __len__(self):
         """
         画像の枚数を返す
         """
-        return len(self.file_list)
+        return len(self.img_file_list)
 
     def __getitem__(self, index):
         """
         前処理した画像データのTensor形式のデータとラベルを取得
         """
         # 指定したindexの画像を読み込む
-        img_path = self.file_list[index]
+        img_path = self.img_file_list[index]
         img = Image.open(img_path).convert("RGB")
 
         # 画像の前処理を実施
@@ -42,12 +43,12 @@ class ShodouDataset(torch.utils.data.Dataset):
 
         # 画像ラベルをファイル名から抜き出す
         # label = self.file_list[index].split('/')[2][10:]
-        label = self.file_list[index].split("/")[-1].split("_")[0]
+        img_id = self.img_file_list[index].split("/")[-1].split(".")[0]
 
         # ラベル名を数値に変換
-        label = self.classes.index(label)
+        write_time = self.time_dict[img_id]
 
-        return img_transformed, label
+        return img_transformed, write_time
 # %%
 
 
@@ -79,7 +80,7 @@ class Net(nn.Module):
 # %%
 
 
-def createFileList(train_target, test_target):
+def create_file_list(train_target, test_target):
     sho_unicode = "U66F8"
     dou_unicode = "U9053"
 
@@ -114,6 +115,27 @@ def createFileList(train_target, test_target):
     # TODO 場合分け
     return sho_train_file_list, sho_valid_file_list
 
+
+# %%
+
+def create_time_dict():
+    sho_csv_dir_path = os.path.join(
+        os.path.dirname(__file__), "renamed_data", "csv", "U66F8.csv")
+    dou_csv_dir_path = os.path.join(
+        os.path.dirname(__file__), "renamed_data", "csv", "U9053.csv")
+    time_dict = {}
+    with open(sho_csv_dir_path) as f:
+        csv_reader = csv.reader(f)
+        next(csv_reader)
+        for row in csv_reader:
+            time_dict[row[0]] = int(row[1])
+    with open(dou_csv_dir_path) as f:
+        csv_reader = csv.reader(f)
+        next(csv_reader)
+        for row in csv_reader:
+            time_dict[row[0]] = int(row[1])
+
+    return time_dict
 # %%
 
 
@@ -123,7 +145,7 @@ def train(model, device, train_loader, optimizer, epoch):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+        loss = F.mse_loss(output, target)
         loss.backward()
         optimizer.step()
         if batch_idx % 10 == 0:
@@ -157,51 +179,54 @@ def test(model, device, test_loader):
 
 
 # %%
-train_target = "sho"
-test_target = "sho"
+def main():
+    train_target = "sho"
+    test_target = "sho"
 
-use_cuda = torch.cuda.is_available()
-# torch.manual_seed(args.seed)
-device = torch.device("cuda" if use_cuda else "cpu")
+    use_cuda = torch.cuda.is_available()
+    # torch.manual_seed(args.seed)
+    device = torch.device("cuda" if use_cuda else "cpu")
 
-train_kwargs = {'batch_size': 64}
-test_kwargs = {'batch_size': 1000}
-if use_cuda:
-    cuda_kwargs = {'num_workers': 1,
-                   'pin_memory': True,
-                   'shuffle': True}
-    train_kwargs.update(cuda_kwargs)
-    test_kwargs.update(cuda_kwargs)
+    train_kwargs = {'batch_size': 64}
+    test_kwargs = {'batch_size': 1000}
+    if use_cuda:
+        cuda_kwargs = {'num_workers': 1,
+                       'pin_memory': True,
+                       'shuffle': True}
+        train_kwargs.update(cuda_kwargs)
+        test_kwargs.update(cuda_kwargs)
 
-chr_classes = [
-    "U66F8", "U9053"
-]
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
 
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-])
+    train_filelist, test_filelist = create_file_list(
+        train_target=train_target, test_target=test_target)
 
-train_filelist, test_filelist = createFileList(
-    train_target=train_target, test_target=test_target)
+    time_dict = create_time_dict()
 
-train_dataset = ShodouDataset(
-    file_list=train_filelist, chr_classes=chr_classes, transform=transform)
+    train_dataset = ShodouDataset(
+        img_file_list=train_filelist, time_dict=time_dict, transform=transform)
 
-test_dataset = ShodouDataset(
-    file_list=test_filelist, chr_classes=chr_classes, transform=transform)
+    test_dataset = ShodouDataset(
+        img_file_list=test_filelist, time_dict=time_dict, transform=transform)
 
-train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
-test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
+    train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
+    test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
-model = Net().to(device)
-optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
+    model = Net().to(device)
+    optimizer = optim.Adadelta(model.parameters(), lr=1.0)
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
 
-for epoch in range(1, 15):
-    train(model, device, train_loader, optimizer, epoch)
-    test(model, device, test_loader)
-    scheduler.step()
+    for epoch in range(1, 15):
+        train(model, device, train_loader, optimizer, epoch)
+        test(model, device, test_loader)
+        scheduler.step()
 
-torch.save(model.state_dict(), "cnn_reg.pt")
+    torch.save(model.state_dict(), "cnn_reg.pt")
+
+
+if __name__ == '__main__':
+    main()
 # %%
