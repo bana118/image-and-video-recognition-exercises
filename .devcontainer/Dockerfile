@@ -1,4 +1,4 @@
-FROM python:3.8.6-slim
+FROM python:3.8.5-slim
 
 RUN apt update \
     && apt install -y --no-install-recommends \

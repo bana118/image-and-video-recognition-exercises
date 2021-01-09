@@ -50,54 +50,63 @@ class ShodouDataset(torch.utils.data.Dataset):
 # %%
 
 
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(3, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc1 = nn.Linear(128 * 7938, 128)
+        self.fc2 = nn.Linear(128, 1)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.dropout2(x)
+        x = self.fc2(x)
+        return x
+
 # class Net(nn.Module):
 #     def __init__(self):
 #         super(Net, self).__init__()
-#         self.conv1 = nn.Conv2d(3, 32, 3, 1)
-#         self.conv2 = nn.Conv2d(32, 64, 3, 1)
+#         self.conv1 = nn.Conv2d(3, 32, 15, 1)
+#         self.conv2 = nn.Conv2d(32, 16, 5, 1)
 #         self.dropout1 = nn.Dropout(0.25)
 #         self.dropout2 = nn.Dropout(0.5)
-#         self.fc1 = nn.Linear(128 * 7938, 128)
+#         self.fc1 = nn.Linear(50176, 128)
 #         self.fc2 = nn.Linear(128, 1)
 
 #     def forward(self, x):
 #         x = self.conv1(x)
 #         x = F.relu(x)
+#         x = F.max_pool2d(x, 10, 2)
 #         x = self.conv2(x)
 #         x = F.relu(x)
-#         x = F.max_pool2d(x, 2)
-#         x = self.dropout1(x)
+#         x = F.max_pool2d(x, 2, 2)
 #         x = torch.flatten(x, 1)
 #         x = self.fc1(x)
 #         x = F.relu(x)
-#         x = self.dropout2(x)
 #         x = self.fc2(x)
-#         output = F.log_softmax(x, dim=1)
-#         return torch.flatten(output)
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, 15, 1)
-        self.conv2 = nn.Conv2d(32, 16, 5, 1)
-        self.dropout1 = nn.Dropout(0.25)
-        self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(50176, 32)
-        self.fc2 = nn.Linear(32, 1)
+#         return x
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 10, 2)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2, 2)
-        x = torch.flatten(x, 1)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.fc2(x)
-        output = F.softmax(x, dim=1)
-        return torch.flatten(output)
 
+# class Net(nn.Module):
+#     def __init__(self):
+#         super(Net, self).__init__()
+#         self.layer = torch.nn.Linear(786432, 1)
+
+#     def forward(self, x):
+#         x = x.view(-1, 4 * 3 * 256 * 256)
+#         x = self.layer(x)
+#         return x
 # %%
 
 
@@ -119,25 +128,56 @@ def create_file_list(train_target, test_target):
         renamed_data_dir_path, dou_unicode))
 
     # TODO ランダム化
-    sho_num_data = len(sho_file_list)
+    sho_num_data = 20
     sho_num_split = int(sho_num_data * 0.8)
-    dou_num_data = len(dou_file_list)
+    dou_num_data = 20
     dou_num_split = int(dou_num_data * 0.8)
 
     sho_train_file_list += [os.path.join(renamed_data_dir_path, sho_unicode,
                                          file_name).replace("\\", "/") for file_name in sho_file_list[:sho_num_split]]
-    sho_valid_file_list += [os.path.join(renamed_data_dir_path, sho_unicode,
-                                         file_name).replace("\\", "/") for file_name in sho_file_list[sho_num_split:]]
+    sho_train_file_list += [os.path.join(renamed_data_dir_path, sho_unicode, file_name).replace("\\", "/")
+                            for file_name in sho_file_list[sho_num_data:sho_num_data + sho_num_split]]
+    sho_valid_file_list += [os.path.join(renamed_data_dir_path, sho_unicode, file_name).replace("\\", "/")
+                            for file_name in sho_file_list[sho_num_split:sho_num_data]]
+    sho_valid_file_list += [os.path.join(renamed_data_dir_path, sho_unicode, file_name).replace("\\", "/")
+                            for file_name in sho_file_list[sho_num_data + sho_num_split:]]
+
     dou_train_file_list += [os.path.join(renamed_data_dir_path, dou_unicode,
                                          file_name).replace("\\", "/") for file_name in dou_file_list[:dou_num_split]]
-    dou_valid_file_list += [os.path.join(renamed_data_dir_path, dou_unicode,
-                                         file_name).replace("\\", "/") for file_name in dou_file_list[dou_num_split:]]
+    dou_train_file_list += [os.path.join(renamed_data_dir_path, dou_unicode, file_name).replace("\\", "/")
+                            for file_name in dou_file_list[dou_num_data:dou_num_data + dou_num_split]]
+    dou_valid_file_list += [os.path.join(renamed_data_dir_path, dou_unicode, file_name).replace("\\", "/")
+                            for file_name in dou_file_list[dou_num_split:dou_num_data]]
+    dou_valid_file_list += [os.path.join(renamed_data_dir_path, dou_unicode, file_name).replace("\\", "/")
+                            for file_name in dou_file_list[dou_num_data + dou_num_split:]]
+
+    shodou_train_file_list = sho_train_file_list + dou_train_file_list
+    shodou_valid_file_list = sho_valid_file_list + dou_valid_file_list
 
     # TODO 場合分け
-    return sho_train_file_list, sho_valid_file_list
-
-
+    if train_target == "sho":
+        if test_target == "sho":
+            return sho_train_file_list, sho_valid_file_list
+        elif test_target == "dou":
+            return sho_train_file_list, dou_valid_file_list
+        else:
+            return sho_train_file_list, shodou_valid_file_list
+    elif train_target == "dou":
+        if test_target == "sho":
+            return dou_train_file_list, sho_valid_file_list
+        elif test_target == "dou":
+            return dou_train_file_list, dou_valid_file_list
+        else:
+            return dou_train_file_list, shodou_valid_file_list
+    else:
+        if test_target == "sho":
+            return shodou_train_file_list, sho_valid_file_list
+        elif test_target == "dou":
+            return shodou_train_file_list, dou_valid_file_list
+        else:
+            return shodou_train_file_list, shodou_valid_file_list
 # %%
+
 
 def create_time_dict():
     sho_csv_dir_path = os.path.join(
@@ -166,7 +206,7 @@ def train(model, device, train_loader, optimizer, epoch):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.mse_loss(output, target.float())
+        loss = F.mse_loss(output, target.float().view(-1, 1))
         loss.backward()
         optimizer.step()
         print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -185,7 +225,7 @@ def test(model, device, test_loader):
             output = model(data)
             print(output.data)
             # sum up batch loss
-            test_loss += F.mse_loss(output, target.float(), reduction='sum').item()
+            test_loss += F.mse_loss(output, target.float().view(-1, 1), reduction='sum').item()
             # get the index of the max log-probability
             # pred = output.argmax(keepdim=True)
             # correct += pred.eq(target.view_as(pred)).sum().item()
@@ -197,15 +237,15 @@ def test(model, device, test_loader):
 
 # %%
 def main():
-    train_target = "sho"
-    test_target = "sho"
+    train_target = "shodou"
+    test_target = "shodou"
 
     use_cuda = torch.cuda.is_available()
     # torch.manual_seed(args.seed)
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    train_kwargs = {'batch_size': 4}
-    test_kwargs = {'batch_size': 4}
+    train_kwargs = {'batch_size': 1}
+    test_kwargs = {'batch_size': 1}
     if use_cuda:
         cuda_kwargs = {'num_workers': 1,
                        'pin_memory': True,
@@ -233,7 +273,7 @@ def main():
 
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.7)
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
 
     for epoch in range(1, 101):
         train(model, device, train_loader, optimizer, epoch)

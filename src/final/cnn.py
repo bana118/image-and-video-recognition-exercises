@@ -180,15 +180,15 @@ mean = (0.5, 0.5, 0.5)
 std = (0.5, 0.5, 0.5)
 
 # Datasetの作成
-sho_train_file_list.extend(dou_train_file_list)
+train_file_list = sho_train_file_list + dou_train_file_list
 shodou_train_dataset = ShodouDataset(
-    file_list=sho_train_file_list, classes=chr_classes,
+    file_list=train_file_list, classes=chr_classes,
     transform=ImageTransform(resize, mean, std),
     phase='train'
 )
-sho_valid_file_list.extend(dou_valid_file_list)
+valid_file_list = sho_valid_file_list + dou_valid_file_list
 shodou_valid_dataset = ShodouDataset(
-    file_list=sho_valid_file_list, classes=chr_classes,
+    file_list=dou_valid_file_list, classes=chr_classes,
     transform=ImageTransform(resize, mean, std),
     phase='valid'
 )
