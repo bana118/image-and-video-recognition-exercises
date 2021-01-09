@@ -280,7 +280,7 @@ def main():
         test(model, device, test_loader)
         scheduler.step()
 
-    torch.save(model.state_dict(), "cnn_reg.pt")
+    # torch.save(model.state_dict(), "cnn_reg.pt")
 
 
 if __name__ == '__main__':
