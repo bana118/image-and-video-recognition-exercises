@@ -157,8 +157,8 @@ def test(model, device, test_loader):
 
 
 # %%
-train = "sho"
-test = "sho"
+train_target = "sho"
+test_target = "sho"
 
 use_cuda = torch.cuda.is_available()
 # torch.manual_seed(args.seed)
@@ -182,7 +182,8 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 
-train_filelist, test_filelist = createFileList(train, test)
+train_filelist, test_filelist = createFileList(
+    train_target=train_target, test_target=test_target)
 
 train_dataset = ShodouDataset(
     file_list=train_filelist, chr_classes=chr_classes, transform=transform)
@@ -202,5 +203,5 @@ for epoch in range(1, 15):
     test(model, device, test_loader)
     scheduler.step()
 
-torch.save(model.state_dict(), "mnist_cnn.pt")
+torch.save(model.state_dict(), "cnn_reg.pt")
 # %%
