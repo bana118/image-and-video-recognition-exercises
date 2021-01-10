@@ -49,7 +49,7 @@ class ShodouDataset(torch.utils.data.Dataset):
             img_path = self.img_file_list[i]
             img = Image.open(img_path).convert("RGB")
 
-            img_transformed = self.augment_transform_list[i](img) if res < len(
+            img_transformed = self.augment_transform_list[res](img) if res < len(
                 self.augment_transform_list) else self.transform(img)
 
             img_id = img_path.split("/")[-1].split(".")[0]
@@ -100,39 +100,6 @@ class Net(nn.Module):
         x = self.fc2(x)
         return x
 
-# class Net(nn.Module):
-#     def __init__(self):
-#         super(Net, self).__init__()
-#         self.conv1 = nn.Conv2d(3, 32, 15, 1)
-#         self.conv2 = nn.Conv2d(32, 16, 5, 1)
-#         self.dropout1 = nn.Dropout(0.25)
-#         self.dropout2 = nn.Dropout(0.5)
-#         self.fc1 = nn.Linear(50176, 128)
-#         self.fc2 = nn.Linear(128, 1)
-
-#     def forward(self, x):
-#         x = self.conv1(x)
-#         x = F.relu(x)
-#         x = F.max_pool2d(x, 10, 2)
-#         x = self.conv2(x)
-#         x = F.relu(x)
-#         x = F.max_pool2d(x, 2, 2)
-#         x = torch.flatten(x, 1)
-#         x = self.fc1(x)
-#         x = F.relu(x)
-#         x = self.fc2(x)
-#         return x
-
-
-# class Net(nn.Module):
-#     def __init__(self):
-#         super(Net, self).__init__()
-#         self.layer = torch.nn.Linear(786432, 1)
-
-#     def forward(self, x):
-#         x = x.view(-1, 4 * 3 * 256 * 256)
-#         x = self.layer(x)
-#         return x
 # %%
 
 
@@ -235,9 +202,10 @@ def train(model, device, train_loader, optimizer, epoch):
         loss = F.mse_loss(output, target.float().view(-1, 1))
         loss.backward()
         optimizer.step()
-        print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-            epoch, batch_idx * len(data), len(train_loader.dataset),
-            100. * batch_idx / len(train_loader), loss.item()))
+        if batch_idx % 10 == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
 
 
 # %%
@@ -268,15 +236,15 @@ def test(model, device, test_loader):
 
 
 def main():
-    train_target = "shodou"
-    test_target = "shodou"
+    train_target = "sho"
+    test_target = "sho"
     epochs = 100
 
-    use_cuda = True
+    use_cuda = torch.cuda.is_available()
     # torch.manual_seed(args.seed)
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    train_kwargs = {'batch_size': 1}
+    train_kwargs = {'batch_size': 4}
     test_kwargs = {'batch_size': 1}
     if use_cuda:
         cuda_kwargs = {'num_workers': 1,
@@ -289,7 +257,14 @@ def main():
         transforms.ToTensor(),
     ])
 
-    augment_transform_list = []
+    rand_deg_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.RandomRotation(degrees=20)
+    ])
+
+    augment_transform_list = [rand_deg_transform] * 5
+    # augment_transform_list.append(horizontal_flip_transform)
+    # augment_transform_list.append(vertical_flip_transform)
 
     train_filelist, test_filelist = create_file_list(
         train_target=train_target, test_target=test_target)
@@ -305,11 +280,50 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
-    model = Net().to(device)
-    # model = models.resnet18().to(device)
-    # num_features = model.fc.in_features
-    # model.fc = nn.Linear(num_features, 1)
+    # model = Net().to(device)
+
+    # Alexnet
+    # model = models.alexnet().to(device)
     # print(model)
+    # num_features = model.classifier[6].in_features
+    # model.classifier[6] = nn.Linear(num_features, 1).to(device)
+
+    # Resnet18
+    # model = models.resnet18().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Resnet34
+    # model = models.resnet34().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Resnet50
+    # model = models.resnet50().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Resnet101
+    model = models.resnet101().to(device)
+    print(model)
+    num_features = model.fc.in_features
+    model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Googlenet
+    # model = models.googlenet(aux_logits=False).to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Inception_v3
+    # model = models.inception_v3(aux_logits=False).to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
     scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
 
