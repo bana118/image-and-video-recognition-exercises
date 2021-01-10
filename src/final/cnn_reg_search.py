@@ -119,6 +119,7 @@ def main():
     model_list.append({"name": "inception_v3", "model": model})
 
     for model_and_name in model_list:
+        print(f"Model: {model_and_name['name']}")
         optimizer = optim.Adadelta(model_and_name["model"].parameters(), lr=1.0)
         scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
         mean_error_list = []
