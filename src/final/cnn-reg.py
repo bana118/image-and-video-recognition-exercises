@@ -21,33 +21,55 @@ import torchvision.models as models
 # %%
 
 class ShodouDataset(torch.utils.data.Dataset):
-    def __init__(self, img_file_list, time_dict, transform=None):
+    def __init__(self, img_file_list, time_dict, is_train, transform=None, augment_transform_list=[]):
         self.img_file_list = img_file_list
         self.transform = transform
         self.time_dict = time_dict
+        self.is_train = is_train
+        self.augment_transform_list = augment_transform_list
 
     def __len__(self):
         """
         画像の枚数を返す
         """
-        return len(self.img_file_list)
+        if self.is_train:
+            inflate = len(self.augment_transform_list) + 1
+            return inflate * len(self.img_file_list)
+        else:
+            return len(self.img_file_list)
 
     def __getitem__(self, index):
         """
         前処理した画像データのTensor形式のデータとラベルを取得
         """
-        # 指定したindexの画像を読み込む
-        img_path = self.img_file_list[index]
-        img = Image.open(img_path).convert("RGB")
+        if self.is_train:
+            inflate = len(self.augment_transform_list) + 1
+            i = index // inflate
+            res = index % inflate
+            img_path = self.img_file_list[i]
+            img = Image.open(img_path).convert("RGB")
 
-        # 画像の前処理を実施
-        img_transformed = self.transform(img)
+            img_transformed = self.augment_transform_list[i](img) if res < len(
+                self.augment_transform_list) else self.transform(img)
 
-        img_id = self.img_file_list[index].split("/")[-1].split(".")[0]
+            img_id = img_path.split("/")[-1].split(".")[0]
+            write_time = self.time_dict[img_id]
 
-        write_time = self.time_dict[img_id]
+            return img_transformed, write_time
+        else:
+            # 指定したindexの画像を読み込む
+            img_path = self.img_file_list[index]
+            img = Image.open(img_path).convert("RGB")
 
-        return img_transformed, write_time
+            # 画像の前処理を実施
+            img_transformed = self.transform(img)
+
+            img_id = img_path.split("/")[-1].split(".")[0]
+
+            write_time = self.time_dict[img_id]
+
+            return img_transformed, write_time
+
 
 # %%
 
@@ -267,16 +289,18 @@ def main():
         transforms.ToTensor(),
     ])
 
+    augment_transform_list = []
+
     train_filelist, test_filelist = create_file_list(
         train_target=train_target, test_target=test_target)
 
     time_dict = create_time_dict()
 
-    train_dataset = ShodouDataset(
-        img_file_list=train_filelist, time_dict=time_dict, transform=transform)
+    train_dataset = ShodouDataset(img_file_list=train_filelist, time_dict=time_dict,
+                                  transform=transform, is_train=True, augment_transform_list=augment_transform_list)
 
-    test_dataset = ShodouDataset(
-        img_file_list=test_filelist, time_dict=time_dict, transform=transform)
+    test_dataset = ShodouDataset(img_file_list=test_filelist, time_dict=time_dict,
+                                 transform=transform, is_train=False, augment_transform_list=augment_transform_list)
 
     train_loader = torch.utils.data.DataLoader(train_dataset, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
