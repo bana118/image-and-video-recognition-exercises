@@ -246,11 +246,11 @@ def test(model, device, test_loader):
 
 
 def main():
-    train_target = "dou"
-    test_target = "dou"
+    train_target = "shodou"
+    test_target = "shodou"
     epochs = 100
 
-    use_cuda = torch.cuda.is_available()
+    use_cuda = True
     # torch.manual_seed(args.seed)
     device = torch.device("cuda" if use_cuda else "cpu")
 
@@ -282,6 +282,10 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_dataset, **test_kwargs)
 
     model = Net().to(device)
+    # model = models.resnet18().to(device)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1)
+    # print(model)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
     scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
 
