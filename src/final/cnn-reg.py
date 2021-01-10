@@ -5,6 +5,9 @@ import os
 import csv
 from PIL import Image
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,6 +15,7 @@ import torch.optim as optim
 import torch.utils.data
 from torchvision import transforms
 from torch.optim.lr_scheduler import StepLR
+import torchvision.models as models
 
 
 # %%
@@ -219,26 +223,32 @@ def train(model, device, train_loader, optimizer, epoch):
 def test(model, device, test_loader):
     model.eval()
     test_loss = 0
+    mean_error = 0
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            print(output.data)
+            print(output, target.float().view(-1, 1))
             # sum up batch loss
             test_loss += F.mse_loss(output, target.float().view(-1, 1), reduction='sum').item()
+            mean_error += abs(output - target.float().view(-1, 1))
             # get the index of the max log-probability
             # pred = output.argmax(keepdim=True)
             # correct += pred.eq(target.view_as(pred)).sum().item()
 
     test_loss /= len(test_loader.dataset)
+    mean_error /= len(test_loader.dataset)
 
-    print('\nTest set: Average loss: {:.4f})\n'.format(test_loss))
-
+    print('\nTest set: Average loss: {:.4f}. Mean Error: {:.4f})\n'.format(test_loss, float(mean_error)))
+    return mean_error
 
 # %%
+
+
 def main():
-    train_target = "shodou"
-    test_target = "shodou"
+    train_target = "dou"
+    test_target = "dou"
+    epochs = 100
 
     use_cuda = torch.cuda.is_available()
     # torch.manual_seed(args.seed)
@@ -273,11 +283,19 @@ def main():
 
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
+    scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
 
-    for epoch in range(1, 101):
+    mean_error_list = []
+    for epoch in range(1, epochs + 1):
         train(model, device, train_loader, optimizer, epoch)
-        test(model, device, test_loader)
+        mean_error = test(model, device, test_loader)
+        mean_error_list.append(mean_error)
+        t = np.arange(1, epoch + 1)
+        plt.xlim(1, epochs)
+        plt.ylim(0, 5000)
+        plt.plot(t, mean_error_list)
+        plt.pause(0.1)
+        plt.clf()
         scheduler.step()
 
     # torch.save(model.state_dict(), "cnn_reg.pt")
