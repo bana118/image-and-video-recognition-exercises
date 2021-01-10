@@ -118,15 +118,14 @@ def main():
     model.fc = nn.Linear(num_features, 1).to(device)
     model_list.append({"name": "inception_v3", "model": model})
 
-    optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
-
     for model_and_name in model_list:
+        optimizer = optim.Adadelta(model_and_name["model"].parameters(), lr=1.0)
+        scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
         mean_error_list = []
         for epoch in range(1, epochs + 1):
             train(model_and_name["model"], device, train_loader, optimizer, epoch)
             mean_error = test(model_and_name["model"], device, test_loader)
-            mean_error_list.append(mean_error)
+            mean_error_list.append(float(mean_error.float()))
             scheduler.step()
         output_dir = os.path.join(os.path.dirname(__file__), "output")
         t = np.arange(1, epoch + 1)
@@ -139,7 +138,7 @@ def main():
         plt.savefig(f"{output_dir}/{model_and_name['name']}.pdf")
         plt.clf()
         with open(f"{output_dir}/{model_and_name['name']}.log", "w") as f:
-            f.write(str(mean_error_list))
+            f.write(f"Best MAE: {min(mean_error_list)}")
         torch.save(model.state_dict(), f"{output_dir}/{model_and_name['name']}.pt")
 
 

@@ -21,3 +21,11 @@ MNIST example
     jupyter lab --port=8080 --ip=0.0.0.0 --no-browser --allow-root
     ```
     313/313 - 0s - loss: 0.0804 - accuracy: 0.9763
+
+# final
+## model search
+
+Windows
+```
+python .\src\final\cnn_reg_search.py > .\src\final\output\00all.log 2>&1
+```
