@@ -251,7 +251,7 @@ def main():
         print(f"Model: {model_name}")
         model = get_model(model_name, device)
         optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-        scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
+        scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
         mean_error_list = []
         for epoch in range(1, epochs + 1):
             train(model, device, train_loader, optimizer, epoch)
