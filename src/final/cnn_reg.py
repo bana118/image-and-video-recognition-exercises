@@ -238,10 +238,11 @@ def test(model, device, test_loader):
 def main():
     train_target = "sho"
     test_target = "sho"
-    epochs = 100
+    epochs = 2
+
+    torch.manual_seed(1)
 
     use_cuda = torch.cuda.is_available()
-    # torch.manual_seed(args.seed)
     device = torch.device("cuda" if use_cuda else "cpu")
 
     train_kwargs = {'batch_size': 4}
@@ -262,7 +263,7 @@ def main():
         transforms.RandomRotation(degrees=20)
     ])
 
-    augment_transform_list = [rand_deg_transform] * 5
+    augment_transform_list = [rand_deg_transform] * 4
     # augment_transform_list.append(horizontal_flip_transform)
     # augment_transform_list.append(vertical_flip_transform)
 
@@ -307,10 +308,16 @@ def main():
     # model.fc = nn.Linear(num_features, 1).to(device)
 
     # Resnet101
-    model = models.resnet101().to(device)
-    print(model)
-    num_features = model.fc.in_features
-    model.fc = nn.Linear(num_features, 1).to(device)
+    # model = models.resnet101().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Resnet152
+    # model = models.resnet152().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
 
     # Googlenet
     # model = models.googlenet(aux_logits=False).to(device)
@@ -324,8 +331,56 @@ def main():
     # num_features = model.fc.in_features
     # model.fc = nn.Linear(num_features, 1).to(device)
 
+    # VGG 11
+    # model = models.vgg11().to(device)
+    # print(model)
+    # num_features = model.classifier[6].in_features
+    # model.classifier[6] = nn.Linear(num_features, 1).to(device)
+
+    # VGG 11 with batch normalization
+    # model = models.vgg11_bn().to(device)
+    # print(model)
+    # num_features = model.classifier[6].in_features
+    # model.classifier[6] = nn.Linear(num_features, 1).to(device)
+
+    # Densenet-121
+    # model = models.densenet121().to(device)
+    # print(model)
+    # num_features = model.classifier.in_features
+    # model.classifier = nn.Linear(num_features, 1).to(device)
+
+    # Shufflenet V2
+    # model = models.shufflenet_v2_x1_0().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Mobilenet v2
+    # model = models.mobilenet_v2().to(device)
+    # print(model)
+    # num_features = model.classifier[1].in_features
+    # model.classifier[1] = nn.Linear(num_features, 1).to(device)
+
+    # ResNeXt-50-32x4d
+    # model = models.resnext50_32x4d().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # Wide Resnet-50-2
+    # model = models.wide_resnet50_2().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
+
+    # MNASNet 0.5
+    model = models.mnasnet0_5().to(device)
+    print(model)
+    num_features = model.classifier[1].in_features
+    model.classifier[1] = nn.Linear(num_features, 1).to(device)
+
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=10, gamma=0.9)
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
 
     mean_error_list = []
     for epoch in range(1, epochs + 1):
