@@ -153,7 +153,7 @@ def get_model(name, device):
         num_features = model.fc.in_features
         model.fc = nn.Linear(num_features, 1).to(device)
         return model
-    elif name == "resnext101_32x4d":
+    elif name == "resnext101_32x8d":
         model = models.resnext101_32x8d().to(device)
         num_features = model.fc.in_features
         model.fc = nn.Linear(num_features, 1).to(device)
@@ -242,7 +242,7 @@ def main():
                        "resnet18", "resnet34", "resnet50", "resnet101", "resnet152",
                        "googlenet", "inception_v3",
                        "shufflenet_v2_x0_5", "shufflenet_v2_x1_0", "shufflenet_v2_x1_5", "shufflenet_v2_x2_0",
-                       "mobilenet_v2", "resnext50_32x4d", "resnext101_32x4d",
+                       "mobilenet_v2", "resnext50_32x4d", "resnext101_32x8d",
                        "wide_resnet50_2", "wide_resnet101_2",
                        "mnasnet0_5", "mnasnet0_75", "mnasnet1_0", "mnasnet1_3"]
 

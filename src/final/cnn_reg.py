@@ -238,7 +238,7 @@ def test(model, device, test_loader):
 def main():
     train_target = "sho"
     test_target = "sho"
-    epochs = 2
+    epochs = 50
 
     torch.manual_seed(1)
 
@@ -361,11 +361,11 @@ def main():
     # num_features = model.classifier[1].in_features
     # model.classifier[1] = nn.Linear(num_features, 1).to(device)
 
-    # ResNeXt-50-32x4d
-    # model = models.resnext50_32x4d().to(device)
-    # print(model)
-    # num_features = model.fc.in_features
-    # model.fc = nn.Linear(num_features, 1).to(device)
+    # ResNeXt-100-32x8d
+    model = models.resnext101_32x8d().to(device)
+    print(model)
+    num_features = model.fc.in_features
+    model.fc = nn.Linear(num_features, 1).to(device)
 
     # Wide Resnet-50-2
     # model = models.wide_resnet50_2().to(device)
@@ -374,13 +374,13 @@ def main():
     # model.fc = nn.Linear(num_features, 1).to(device)
 
     # MNASNet 0.5
-    model = models.mnasnet0_5().to(device)
-    print(model)
-    num_features = model.classifier[1].in_features
-    model.classifier[1] = nn.Linear(num_features, 1).to(device)
+    # model = models.mnasnet0_5().to(device)
+    # print(model)
+    # num_features = model.classifier[1].in_features
+    # model.classifier[1] = nn.Linear(num_features, 1).to(device)
 
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
+    scheduler = StepLR(optimizer, step_size=1, gamma=1.0)
 
     mean_error_list = []
     for epoch in range(1, epochs + 1):
@@ -394,6 +394,7 @@ def main():
         plt.pause(0.1)
         plt.clf()
         scheduler.step()
+    print(f"Best MAE: {min(mean_error_list)}")
 
     # torch.save(model.state_dict(), "cnn_reg.pt")
 
