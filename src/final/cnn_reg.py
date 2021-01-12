@@ -394,7 +394,7 @@ def main():
         plt.pause(0.1)
         plt.clf()
         scheduler.step()
-    print(f"Best MAE: {min(mean_error_list)}")
+    print(f"Best MAE: {float(min(mean_error_list))}")
 
     # torch.save(model.state_dict(), "cnn_reg.pt")
 
