@@ -326,10 +326,10 @@ def main():
     # model.fc = nn.Linear(num_features, 1).to(device)
 
     # Inception_v3
-    # model = models.inception_v3(aux_logits=False).to(device)
-    # print(model)
-    # num_features = model.fc.in_features
-    # model.fc = nn.Linear(num_features, 1).to(device)
+    model = models.inception_v3(aux_logits=False).to(device)
+    print(model)
+    num_features = model.fc.in_features
+    model.fc = nn.Linear(num_features, 1).to(device)
 
     # VGG 11
     # model = models.vgg11().to(device)
@@ -362,10 +362,10 @@ def main():
     # model.classifier[1] = nn.Linear(num_features, 1).to(device)
 
     # ResNeXt-100-32x8d
-    model = models.resnext101_32x8d().to(device)
-    print(model)
-    num_features = model.fc.in_features
-    model.fc = nn.Linear(num_features, 1).to(device)
+    # model = models.resnext101_32x8d().to(device)
+    # print(model)
+    # num_features = model.fc.in_features
+    # model.fc = nn.Linear(num_features, 1).to(device)
 
     # Wide Resnet-50-2
     # model = models.wide_resnet50_2().to(device)
@@ -380,7 +380,7 @@ def main():
     # model.classifier[1] = nn.Linear(num_features, 1).to(device)
 
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
-    scheduler = StepLR(optimizer, step_size=1, gamma=1.0)
+    scheduler = StepLR(optimizer, step_size=1, gamma=0.9)
 
     mean_error_list = []
     for epoch in range(1, epochs + 1):
