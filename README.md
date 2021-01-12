@@ -1,5 +1,20 @@
 # image-and-video-recognition-exercises
 
+Python 3.8.5  
+NVIDIA-SMI 457.51       Driver Version: 457.51       CUDA Version: 11.1
+# Setup
+## pip
+
+```
+pip install -r requirements.txt
+```
+
+## conda
+
+```
+conda create --name <env> --file conda_requirements.txt
+```
+
 
 # jupyterlab
 
