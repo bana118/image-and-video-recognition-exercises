@@ -39,6 +39,6 @@ for char_code in image_dir_list:
             renamed_id = f"{char_code}_{row[0].zfill(5)}"
             renamed_csv_contents.append([renamed_id, row[1]])
     renamed_csv_file_path = os.path.join(renamed_csv_dir_path, f"{char_code}.csv")
-    with open(renamed_csv_file_path, "w") as f:
+    with open(renamed_csv_file_path, "w", newline="") as f:
         csv_writer = csv.writer(f)
         csv_writer.writerows(renamed_csv_contents)
