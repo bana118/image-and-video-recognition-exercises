@@ -83,7 +83,7 @@ def main():
         output_dir = os.path.join(os.path.dirname(__file__), "output")
         t = np.arange(1, epoch + 1)
         plt.xlim(1, epochs)
-        plt.ylim(0, 10000)
+        plt.ylim(0, 5000)
         plt.xlabel("Epochs")
         plt.ylabel("MAE (ms)")
         plt.plot(t, mean_error_list)
