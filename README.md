@@ -47,7 +47,7 @@ python .\src\final\cnn_reg_search.py > .\src\final\output\00all.log 2>&1
 
 ## Inception_v3
 
-windows
+Windows
 
 ```
 python .\src\final\cnn_reg_inception_v3.py > .\src\final\output\00all.log 2>&1
